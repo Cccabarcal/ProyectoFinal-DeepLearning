@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clasificador de noticias · Deep Learning</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="aurora" aria-hidden="true">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+    <span class="blob blob-3"></span>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">◧</div>
+      <div class="brand-text">
+        <strong>NewsClassifier</strong>
+        <span>AG News · 4 categorías · Deep Learning</span>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <span id="demo-badge" class="badge badge-demo" hidden>Modo demo</span>
+      <button id="theme-toggle" class="icon-btn" title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Clasifica una noticia en segundos</h1>
+      <p class="subtitle">
+        Pega un titular o el cuerpo de una noticia (en inglés) y compara en paralelo
+        las predicciones de los cuatro modelos.
+      </p>
+    </section>
+
+    <section class="composer card">
+      <label for="news-input" class="composer-label">Texto de la noticia</label>
+      <textarea id="news-input" placeholder="e.g. Apple unveils a new chip that doubles battery life on its laptops..."
+        rows="5" maxlength="5000"></textarea>
+      <div class="composer-footer">
+        <div class="examples" id="examples">
+          <span class="examples-label">Ejemplos:</span>
+          <button class="chip" data-text="Wall Street stocks tumble as oil prices surge and the dollar weakens.">Business</button>
+          <button class="chip" data-text="The national team secured a dramatic win in the championship final last night.">Sports</button>
+          <button class="chip" data-text="Researchers unveil a new AI chip that accelerates machine learning on phones.">Sci/Tech</button>
+          <button class="chip" data-text="The president met with world leaders to negotiate a ceasefire along the border.">World</button>
+        </div>
+        <div class="composer-buttons">
+          <span class="charcount"><span id="charcount">0</span> / 5000</span>
+          <button id="clear-btn" class="btn btn-ghost">Limpiar</button>
+          <button id="classify-btn" class="btn btn-primary">
+            <span class="btn-label">Clasificar</span>
+            <span class="spinner" hidden></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section id="status" class="status" hidden></section>
+
+    <section id="results" class="results"></section>
+
+    <section id="attention-section" class="card attention-card" hidden>
+      <div class="section-head">
+        <h2>Mapa de atención · NewsHybridNet</h2>
+        <span class="muted">Palabras que más pesaron en la predicción</span>
+      </div>
+      <div id="attention-tokens" class="attention-tokens"></div>
+      <div class="gate-wrap">
+        <div class="gate-head">
+          <span>Compuerta de fusión</span>
+          <span class="muted">¿qué rama domina?</span>
+        </div>
+        <div class="gate-bar">
+          <div id="gate-semantic" class="gate-seg gate-semantic" style="width:50%">
+            <span>Semántica</span>
+          </div>
+          <div id="gate-lexical" class="gate-seg gate-lexical" style="width:50%">
+            <span>Léxica</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Proyecto final · Deep Learning · TF-IDF+Softmax · BiLSTM · NewsHybridNet · DistilBERT</span>
+  </footer>
+
+  <template id="result-card-template">
+    <article class="card result-card">
+      <div class="result-head">
+        <div class="result-title">
+          <h3 class="model-name"></h3>
+          <p class="model-desc"></p>
+        </div>
+        <span class="badge badge-mode"></span>
+      </div>
+      <div class="prediction">
+        <span class="pred-label-chip"></span>
+        <span class="pred-conf"></span>
+      </div>
+      <div class="bars"></div>
+      <div class="result-foot">
+        <span class="latency"></span>
+      </div>
+    </article>
+  </template>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

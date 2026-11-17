@@ -1,0 +1,23 @@
+# ---- Pesos y artefactos de modelos (pesados; no versionar) ----
+models/checkpoints/
+outputs/
+*.pt
+*.bin
+*.npy
+*.joblib
+*.safetensors
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# ---- Sistema / editor ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
