@@ -28,37 +28,6 @@ El diseño completo (problema, datos, arquitecturas, hiperparámetros, evaluaci�
 
 ---
 
-## 🚀 Cómo correr el proyecto (paso a paso)
-
-> Requiere Python 3.10+. Los pesos entrenados ya están en `models/results/checkpoints/`.
-
-**1. Abre una terminal e instala las dependencias:**
-
-```bash
-cd app/backend
-pip install -r requirements.txt
-```
-
-**2. Abre una segunda terminal y arranca el servidor:**
-
-```bash
-cd app/backend
-python -m uvicorn main:app --reload --port 8000
-```
-
-**3. Abre en el navegador:**
-
-```
-http://localhost:8000
-```
-
-Pega una noticia (en inglés), pulsa **Clasificar** y verás la predicción de los 4 modelos. Listo. ✅
-
-> No abras `index.html` con doble clic: la app debe cargarse desde `http://localhost:8000`,
-> que sirve tanto la página como la API.
-
----
-
 ## Estructura del repositorio
 
 ```
@@ -166,12 +135,6 @@ models/results/checkpoints/
 ```
 
 Reinicia el servidor y la insignia de cada modelo pasará de `demo` a `real`.
-
-> **Importante (NewsHybridNet):** su rama léxica usa `hash()` de Python para los n-gramas de
-> caracteres, que **no es estable entre procesos** salvo que se fije `PYTHONHASHSEED`. Para que la
-> inferencia reproduzca el entrenamiento, entrena y sirve con el mismo valor
-> (p. ej. `PYTHONHASHSEED=0`), o cambia a un hash determinista con `hashlib` en el notebook y en
-> `app/backend/preprocessing.py`. Los demás modelos no se ven afectados.
 
 ---
 
