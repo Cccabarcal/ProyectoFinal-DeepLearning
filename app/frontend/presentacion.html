@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NewsHybridNet · Clasificación de noticias con Deep Learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   SISTEMA DE MARCA  (variables globales, no plantilla de slide)
+   ============================================================ */
+:root{
+  --ink:#0b1020;          /* texto principal, casi negro azulado */
+  --ink-soft:#3a4156;
+  --mute:#6b7488;
+  --line:#e3e6ee;
+  --paper:#f7f8fb;        /* fondo claro */
+  --paper-2:#eef1f7;
+  --white:#ffffff;
+
+  --night:#0a0e1a;        /* fondo oscuro */
+  --night-2:#121829;
+
+  /* acentos por categoría temática del proyecto */
+  --world:#2563eb;        /* azul  */
+  --sports:#059669;       /* verde */
+  --business:#d97706;     /* ámbar */
+  --scitech:#7c3aed;      /* violeta */
+
+  --gold:#c9a227;
+  --accent:#2f6df6;
+  --accent-2:#7c3aed;
+
+  --sans:"Inter",system-ui,sans-serif;
+  --serif:"Fraunces",Georgia,serif;
+  --mono:"JetBrains Mono",monospace;
+
+  --maxw:1180px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);
+  color:var(--ink);
+  background:var(--night);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* ------- contenedor de cada diapositiva ------- */
+.slide{
+  position:relative;
+  min-height:100vh;
+  width:100%;
+  display:flex;
+  padding:clamp(32px,6vh,90px) clamp(24px,6vw,110px);
+  overflow:hidden;
+  scroll-snap-align:start;
+}
+.deck{scroll-snap-type:y proximity}
+
+/* numeración y barra lateral */
+.slide__tag{
+  position:absolute; top:clamp(24px,4vh,48px); left:clamp(24px,6vw,110px);
+  font-family:var(--mono); font-size:12px; letter-spacing:.18em; text-transform:uppercase;
+  display:flex; gap:14px; align-items:center;
+}
+.slide__tag .dot{width:7px;height:7px;border-radius:50%}
+.slide__num{
+  position:absolute; bottom:clamp(22px,4vh,46px); right:clamp(24px,6vw,110px);
+  font-family:var(--mono); font-size:12px; letter-spacing:.14em; opacity:.5;
+}
+.kicker{
+  font-family:var(--mono); font-size:13px; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--accent); margin-bottom:22px;
+}
+h1,h2,h3{font-family:var(--serif); font-weight:400; line-height:1.04; letter-spacing:-.02em}
+.lead{font-size:clamp(17px,1.5vw,20px); line-height:1.6; color:var(--ink-soft)}
+.badge{
+  display:inline-flex; align-items:center; gap:8px; padding:7px 14px; border-radius:999px;
+  font-size:13px; font-weight:600; letter-spacing:.02em;
+}
+
+/* utilidades de color de fondo por slide */
+.bg-paper{background:var(--paper); color:var(--ink)}
+.bg-paper .lead{color:var(--ink-soft)}
+.bg-night{
+  background:
+    radial-gradient(1100px 620px at 78% -8%, rgba(124,58,237,.20), transparent 60%),
+    radial-gradient(900px 560px at 8% 112%, rgba(47,109,246,.20), transparent 55%),
+    var(--night);
+  color:#eef1f8;
+}
+.bg-night .lead{color:#aeb6cc}
+.bg-night .kicker{color:#8fb0ff}
+.bg-ink{background:var(--night-2); color:#eef1f8}
+
+/* navegación fija */
+.nav{
+  position:fixed; right:18px; top:50%; transform:translateY(-50%);
+  display:flex; flex-direction:column; gap:10px; z-index:50;
+}
+.nav a{width:9px;height:9px;border-radius:50%;background:#ffffff40;transition:.25s}
+.nav a:hover{background:#ffffff;transform:scale(1.3)}
+.progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent-2));z-index:60;width:0}
+.hint{
+  position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+  font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:#ffffff66; z-index:50;
+  animation:fade 2.6s ease-in-out infinite;
+}
+@keyframes fade{0%,100%{opacity:.3}50%{opacity:.85}}
+
+/* chips de categoría */
+.cat{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600}
+.cat i{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+/* tarjetas genéricas reutilizables (pero compuestas distinto por slide) */
+.card{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:26px}
+.bg-night .card{background:#ffffff0a;border-color:#ffffff1a;backdrop-filter:blur(6px)}
+
+/* barras */
+.bar{height:12px;border-radius:999px;background:var(--paper-2);overflow:hidden}
+.bar > span{display:block;height:100%;border-radius:999px}
+
+/* tabla */
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:13px 10px;border-bottom:1px solid var(--line)}
+.bg-night th,.bg-night td{border-color:#ffffff18}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:500}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+@media(max-width:820px){
+  .slide{padding:84px 24px 64px}
+  .two-col,.split,.both-sides{grid-template-columns:1fr !important}
+  .nav{display:none}
+}
+
+/* ============================================================
+   MODO EMBEBIDO  ( ?solo=sN )
+   Cuando la presentación se incrusta en un iframe del frontend,
+   se muestra UNA sola diapositiva que llena exactamente el marco.
+   ============================================================ */
+body.embed{overflow:hidden}
+body.embed .nav,
+body.embed .hint,
+body.embed .progress{display:none !important}
+body.embed .deck{display:block}
+body.embed .slide{display:none}          /* ocultar todas */
+body.embed .slide.embed-show{             /* mostrar solo la pedida */
+  display:flex;
+  min-height:100vh;
+  height:100vh;
+}
+/* en el marco incrustado no hace falta el número de página de cada slide */
+body.embed .slide__num{display:none}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<nav class="nav" id="nav"></nav>
+<div class="hint">↓ scroll · ← → teclas</div>
+<main class="deck" id="deck">
+
+<!-- ======================= 01 · PORTADA (full-bleed, centrada-baja) ======================= -->
+<section class="slide bg-night" id="s1" style="flex-direction:column;justify-content:space-between">
+  <div class="slide__tag"><span class="dot" style="background:var(--gold)"></span> Deep Learning · Proyecto final</div>
+
+  <!-- marca de categorías flotando arriba -->
+  <div style="position:absolute;top:clamp(26px,5vh,60px);right:clamp(24px,6vw,110px);display:flex;gap:18px;font-family:var(--mono);font-size:12px;letter-spacing:.1em;opacity:.8">
+    <span style="color:#6ea0ff">World</span>
+    <span style="color:#34d399">Sports</span>
+    <span style="color:#fbbf24">Business</span>
+    <span style="color:#b794f6">Sci/Tech</span>
+  </div>
+
+  <div style="margin-top:auto;max-width:980px">
+    <div class="kicker" style="color:#8fb0ff">Clasificación automática de noticias</div>
+    <h1 style="font-size:clamp(44px,7.2vw,104px);letter-spacing:-.03em">
+      NewsHybridNet
+    </h1>
+    <h2 style="font-size:clamp(20px,2.6vw,34px);color:#c3cbe2;margin-top:18px;font-weight:300;line-height:1.25;max-width:820px">
+      ¿Cuánto rinde una red ligera y propia frente a un Transformer de 66 millones de parámetros?
+    </h2>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:24px;margin-top:48px">
+    <div class="lead" style="max-width:420px;font-size:16px">
+      Una comparación honesta entre un enfoque clásico, una arquitectura diseñada desde cero y el estado del arte, sobre el mismo dataset y las mismas reglas.
+    </div>
+    <div style="text-align:right;font-family:var(--mono);font-size:13px;color:#8b93ad;letter-spacing:.04em">
+      Emmanuel Álvarez · Samuel Herrera · Cristian Cabarcas<br/>
+      Dataset AG News · 4 modelos en PyTorch
+    </div>
+  </div>
+  <div class="slide__num">01</div>
+</section>
+
+<!-- ======================= 02 · EL PROBLEMA (texto izq / visual der) ======================= -->
+<section class="slide bg-paper" id="s2" style="align-items:center">
+  <div class="slide__tag"><span class="dot" style="background:var(--world)"></span> El problema</div>
+  <div class="two-col" style="display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(40px,6vw,96px);align-items:center;width:100%;max-width:var(--maxw);margin:0 auto">
+
+    <!-- columna texto -->
+    <div>
+      <div class="kicker">Contexto</div>
+      <h2 style="font-size:clamp(30px,4vw,56px)">Miles de noticias al día.<br/>Nadie puede clasificarlas a mano.</h2>
+      <p class="lead" style="margin-top:24px">
+        Organizar titulares por tema —mundo, deportes, negocios, ciencia y tecnología— es lento y no escala.
+        La clasificación automática permite etiquetar, filtrar y recomendar en tiempo real.
+      </p>
+      <p class="lead" style="margin-top:18px;color:var(--ink)">
+        <strong>Pero hay una trampa:</strong> un modelo puede lucir perfecto en su propio test y fallar
+        con noticias de otro medio, otro estilo y otra época.
+      </p>
+    </div>
+
+    <!-- columna visual: pila de titulares entrando a un clasificador -->
+    <div style="position:relative">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="card" style="padding:16px 18px;transform:rotate(-1.5deg)">
+          <div class="cat" style="color:var(--business)"><i style="background:var(--business)"></i>Business</div>
+          <div style="font-size:15px;margin-top:6px;color:var(--ink-soft)">“Oil prices climb as supply tightens”</div>
+        </div>
+        <div class="card" style="padding:16px 18px;transform:rotate(.8deg);margin-left:28px">
+          <div class="cat" style="color:var(--sports)"><i style="background:var(--sports)"></i>Sports</div>
+          <div style="font-size:15px;margin-top:6px;color:var(--ink-soft)">“Champions League draw revealed”</div>
+        </div>
+        <div class="card" style="padding:16px 18px;transform:rotate(-.6deg)">
+          <div class="cat" style="color:var(--scitech)"><i style="background:var(--scitech)"></i>Sci/Tech</div>
+          <div style="font-size:15px;margin-top:6px;color:var(--ink-soft)">“New chip maker unveils AI processor”</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:30px;color:var(--mute);margin:14px 0">↓</div>
+      <div style="background:var(--ink);color:#fff;border-radius:16px;padding:20px 22px;text-align:center">
+        <div style="font-family:var(--mono);font-size:12px;letter-spacing:.16em;opacity:.7">CLASIFICADOR</div>
+        <div style="font-family:var(--serif);font-size:22px;margin-top:4px">4 categorías · en milisegundos</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide__num">02</div>
+</section>
+
+<!-- ======================= 03 · LA PREGUNTA (centrada, gran tipografía) ======================= -->
+<section class="slide bg-ink" id="s3" style="align-items:center;justify-content:center;text-align:center">
+  <div class="slide__tag"><span class="dot" style="background:var(--gold)"></span> Pregunta de investigación</div>
+  <div style="max-width:960px">
+    <div class="kicker" style="color:#8fb0ff;justify-content:center">La hipótesis que guía todo el proyecto</div>
+    <h2 style="font-size:clamp(28px,4.4vw,62px);line-height:1.12;margin-top:10px">
+      ¿Cuánto del rendimiento depende del
+      <span style="color:#b794f6">preentrenamiento profundo</span>
+      y cuánto se recupera con
+      <span style="color:#6ea0ff">conocimiento léxico ligero</span>?
+    </h2>
+    <p class="lead" style="margin:30px auto 0;max-width:680px;color:#aeb6cc">
+      No buscamos solo el mejor accuracy. Buscamos entender <em>de dónde</em> viene el desempeño,
+      construyendo una escalera de tres niveles de conocimiento previo.
+    </p>
+
+    <div style="display:flex;gap:18px;justify-content:center;margin-top:46px;flex-wrap:wrap">
+      <div style="padding:16px 22px;border:1px solid #ffffff22;border-radius:14px;min-width:150px">
+        <div style="font-family:var(--mono);font-size:12px;color:#8b93ad">NIVEL 0</div>
+        <div style="font-family:var(--serif);font-size:19px;margin-top:4px">Sin conocimiento previo</div>
+      </div>
+      <div style="padding:16px 22px;border:1px solid #6ea0ff55;border-radius:14px;min-width:150px;background:#6ea0ff14">
+        <div style="font-family:var(--mono);font-size:12px;color:#6ea0ff">NIVEL 1</div>
+        <div style="font-family:var(--serif);font-size:19px;margin-top:4px">Léxico estático</div>
+      </div>
+      <div style="padding:16px 22px;border:1px solid #b794f655;border-radius:14px;min-width:150px;background:#b794f614">
+        <div style="font-family:var(--mono);font-size:12px;color:#b794f6">NIVEL 2</div>
+        <div style="font-family:var(--serif);font-size:19px;margin-top:4px">Contextual profundo</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide__num">03</div>
+</section>
+
+<!-- ======================= 04 · LOS DATOS (texto a ambos lados, centro visual) ======================= -->
+<section class="slide bg-paper" id="s4" style="align-items:center">
+  <div class="slide__tag"><span class="dot" style="background:var(--sports)"></span> Los datos</div>
+  <div class="both-sides" style="display:grid;grid-template-columns:1fr 1.1fr 1fr;gap:clamp(28px,4vw,64px);align-items:center;width:100%;max-width:var(--maxw);margin:0 auto">
+
+    <!-- izquierda -->
+    <div>
+      <div class="kicker">AG News</div>
+      <h2 style="font-size:clamp(26px,3vw,40px)">Un corpus balanceado y enorme</h2>
+      <p class="lead" style="margin-top:18px">
+        Derivado de más de un millón de artículos de más de 2.000 fuentes. Cuatro clases, perfectamente equilibradas.
+      </p>
+      <div style="margin-top:22px;display:flex;flex-direction:column;gap:10px">
+        <div class="cat" style="color:var(--world)"><i style="background:var(--world)"></i>World — mundo y política</div>
+        <div class="cat" style="color:var(--sports)"><i style="background:var(--sports)"></i>Sports — deportes</div>
+        <div class="cat" style="color:var(--business)"><i style="background:var(--business)"></i>Business — negocios</div>
+        <div class="cat" style="color:var(--scitech)"><i style="background:var(--scitech)"></i>Sci/Tech — ciencia y tecnología</div>
+      </div>
+    </div>
+
+    <!-- centro: números grandes -->
+    <div style="text-align:center">
+      <div style="background:var(--ink);color:#fff;border-radius:24px;padding:34px 22px">
+        <div style="font-family:var(--serif);font-size:clamp(46px,6vw,76px);line-height:1">120k</div>
+        <div style="font-family:var(--mono);font-size:12px;letter-spacing:.14em;opacity:.7;margin-top:6px">EJEMPLOS DE ENTRENAMIENTO</div>
+        <div style="height:1px;background:#ffffff22;margin:22px 0"></div>
+        <div style="display:flex;justify-content:space-around">
+          <div>
+            <div style="font-family:var(--serif);font-size:30px">108k</div>
+            <div style="font-family:var(--mono);font-size:10px;opacity:.7">TRAIN</div>
+          </div>
+          <div>
+            <div style="font-family:var(--serif);font-size:30px">12k</div>
+            <div style="font-family:var(--mono);font-size:10px;opacity:.7">VALIDACIÓN</div>
+          </div>
+          <div>
+            <div style="font-family:var(--serif);font-size:30px">7.6k</div>
+            <div style="font-family:var(--mono);font-size:10px;opacity:.7">TEST</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- derecha -->
+    <div>
+      <div class="kicker">Reglas del juego</div>
+      <p class="lead">
+        Partición <strong>estratificada</strong> con semilla fija. Mismos conjuntos para los cuatro modelos, para que la comparación sea justa.
+      </p>
+      <div class="card" style="margin-top:18px;padding:18px">
+        <div style="font-family:var(--mono);font-size:12px;color:var(--mute);letter-spacing:.1em">EL TEST OFICIAL</div>
+        <div style="font-size:16px;margin-top:6px;color:var(--ink-soft)">7.600 ejemplos reservados. Se usan <strong>una sola vez</strong>, al final. Sin trampas.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide__num">04</div>
+</section>
+
+<!-- ======================= 05 · LA ESCALERA DE MODELOS (tarjetas escalonadas) ======================= -->
+<section class="slide bg-night" id="s5" style="flex-direction:column;justify-content:center">
+  <div class="slide__tag"><span class="dot" style="background:var(--gold)"></span> Los competidores</div>
+  <div style="max-width:var(--maxw);margin:0 auto;width:100%">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px">
+      <div>
+        <div class="kicker" style="color:#8fb0ff">Cuatro modelos, una misma pista</div>
+        <h2 style="font-size:clamp(28px,3.6vw,52px)">De lo clásico a lo profundo</h2>
+      </div>
+      <p class="lead" style="max-width:360px;font-size:15px">Cada peldaño añade un tipo de conocimiento. Así se puede atribuir cada ganancia a su causa.</p>
+    </div>
+
+    <!-- escalera: cuatro columnas a distinta altura -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:44px;align-items:end">
+      <div class="card" style="padding:22px">
+        <div style="font-family:var(--mono);font-size:11px;color:#8b93ad">BASE · NIVEL 0</div>
+        <h3 style="font-size:21px;margin-top:8px">TF-IDF +<br/>Softmax</h3>
+        <p style="font-size:13.5px;color:#aeb6cc;margin-top:10px">Frecuencias de palabras y regresión logística. Rápido e interpretable.</p>
+        <div style="font-family:var(--mono);font-size:12px;color:#8fb0ff;margin-top:14px">Sin preentrenamiento</div>
+      </div>
+
+      <div class="card" style="padding:22px;margin-bottom:26px">
+        <div style="font-family:var(--mono);font-size:11px;color:#8b93ad">BASE · NIVEL 0</div>
+        <h3 style="font-size:21px;margin-top:8px">BiLSTM +<br/>atención</h3>
+        <p style="font-size:13.5px;color:#aeb6cc;margin-top:10px">Red recurrente desde cero. Embeddings aprendidos, sin pesos externos.</p>
+        <div style="font-family:var(--mono);font-size:12px;color:#8fb0ff;margin-top:14px">Desde cero</div>
+      </div>
+
+      <div class="card" style="padding:22px;margin-bottom:52px;border-color:#6ea0ff66;background:linear-gradient(180deg,#6ea0ff18,#ffffff08)">
+        <div style="font-family:var(--mono);font-size:11px;color:#6ea0ff">PROPUESTA · NIVEL 1</div>
+        <h3 style="font-size:22px;margin-top:8px;color:#dce6ff">NewsHybridNet</h3>
+        <p style="font-size:13.5px;color:#c3cbe2;margin-top:10px">Doble rama: semántica + léxica, con fusión por compuerta. Diseño propio.</p>
+        <div style="font-family:var(--mono);font-size:12px;color:#6ea0ff;margin-top:14px">Léxico congelado</div>
+      </div>
+
+      <div class="card" style="padding:22px;margin-bottom:78px;border-color:#b794f666;background:linear-gradient(180deg,#b794f618,#ffffff08)">
+        <div style="font-family:var(--mono);font-size:11px;color:#b794f6">ESTADO DEL ARTE · NIVEL 2</div>
+        <h3 style="font-size:22px;margin-top:8px;color:#e9ddff">DistilBERT</h3>
+        <p style="font-size:13.5px;color:#c3cbe2;margin-top:10px">Transformer preentrenado y ajustado completo. 66 M de parámetros.</p>
+        <div style="font-family:var(--mono);font-size:12px;color:#b794f6;margin-top:14px">Contextual profundo</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide__num">05</div>
+</section>
+
+<!-- ======================= 06 · ARQUITECTURA NEWSHYBRIDNET (texto izq / diagrama der) ======================= -->
+<section class="slide bg-paper" id="s6" style="align-items:center">
+  <div class="slide__tag"><span class="dot" style="background:var(--world)"></span> La arquitectura propuesta</div>
+  <div class="two-col" style="display:grid;grid-template-columns:.85fr 1.15fr;gap:clamp(36px,5vw,80px);align-items:center;width:100%;max-width:var(--maxw);margin:0 auto">
+
+    <!-- izquierda: explicación -->
+    <div>
+      <div class="kicker">NewsHybridNet</div>
+      <h2 style="font-size:clamp(28px,3.4vw,46px)">Dos miradas al mismo texto</h2>
+      <p class="lead" style="margin-top:20px">
+        Una red que combina <strong>significado</strong> y <strong>forma de las palabras</strong>, y aprende cuánto confiar en cada una.
+      </p>
+      <div style="margin-top:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;gap:14px">
+          <div style="width:4px;border-radius:4px;background:var(--world)"></div>
+          <div>
+            <div style="font-weight:600">Rama semántica</div>
+            <div style="font-size:14px;color:var(--ink-soft)">Embeddings fastText congelados → convoluciones 2·3·5 → BiGRU → atención. Capta qué significan los titulares.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px">
+          <div style="width:4px;border-radius:4px;background:var(--business)"></div>
+          <div>
+            <div style="font-weight:600">Rama léxica</div>
+            <div style="font-size:14px;color:var(--ink-soft)">N-gramas de caracteres (3 a 5). Reconoce fragmentos como “-coin” o “bio-” aunque la palabra sea nueva.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px">
+          <div style="width:4px;border-radius:4px;background:var(--scitech)"></div>
+          <div>
+            <div style="font-weight:600">Compuerta aprendida</div>
+            <div style="font-size:14px;color:var(--ink-soft)">Decide, por ejemplo, cuánto peso dar a cada rama. Ante palabras desconocidas, se apoya en la léxica.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- derecha: diagrama de flujo de doble rama -->
+    <div style="position:relative">
+      <div style="background:var(--white);border:1px solid var(--line);border-radius:22px;padding:26px">
+        <div style="text-align:center;font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--mute)">TITULAR + DESCRIPCIÓN</div>
+        <div style="text-align:center;font-size:22px;color:var(--mute);margin:6px 0">↓</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <!-- rama A -->
+          <div style="border:1px solid var(--world);border-radius:14px;padding:14px;background:#2563eb0a">
+            <div style="font-size:12px;font-weight:700;color:var(--world);letter-spacing:.04em">RAMA A · SEMÁNTICA</div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:7px;font-size:12.5px">
+              <div style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 10px">fastText (congelado)</div>
+              <div style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 10px">Conv 2 · 3 · 5</div>
+              <div style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 10px">BiGRU</div>
+              <div style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 10px">Atención + pooling</div>
+            </div>
+          </div>
+          <!-- rama B -->
+          <div style="border:1px solid var(--business);border-radius:14px;padding:14px;background:#d976060a;align-self:start">
+            <div style="font-size:12px;font-weight:700;color:var(--business);letter-spacing:.04em">RAMA B · LÉXICA</div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:7px;font-size:12.5px">
+              <div style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 10px">N-gramas 3–5</div>
+              <div style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 10px">Hashing 2¹⁷</div>
+              <div style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 10px">EmbeddingBag</div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;font-size:22px;color:var(--mute);margin:10px 0">↓</div>
+        <div style="border:1px dashed var(--scitech);border-radius:12px;padding:12px;text-align:center;background:#7c3aed0a">
+          <div style="font-weight:700;color:var(--scitech);font-size:13px">COMPUERTA σ · FUSIÓN</div>
+        </div>
+        <div style="text-align:center;font-size:22px;color:var(--mute);margin:10px 0">↓</div>
+        <div style="display:flex;gap:7px;justify-content:center;flex-wrap:wrap">
+          <span class="badge" style="background:#2563eb14;color:var(--world)">World</span>
+          <span class="badge" style="background:#05966914;color:var(--sports)">Sports</span>
+          <span class="badge" style="background:#d9770614;color:var(--business)">Business</span>
+          <span class="badge" style="background:#7c3aed14;color:var(--scitech)">Sci/Tech</span>
+        </div>
+      </div>
+      <div style="position:absolute;top:-14px;right:18px;background:var(--ink);color:#fff;font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:999px">≈ 0,1 GFLOPs / ejemplo</div>
+    </div>
+  </div>
+  <div class="slide__num">06</div>
+</section>
+
+<!-- ======================= 07 · RESULTADOS EN TEST (barras horizontales, full width) ======================= -->
+<section class="slide bg-paper" id="s7" style="flex-direction:column;justify-content:center">
+  <div class="slide__tag"><span class="dot" style="background:var(--scitech)"></span> Resultados · AG News test</div>
+  <div style="max-width:var(--maxw);margin:0 auto;width:100%">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px">
+      <div>
+        <div class="kicker">7.600 ejemplos nunca vistos</div>
+        <h2 style="font-size:clamp(28px,3.8vw,54px)">El marcador final</h2>
+      </div>
+      <p class="lead" style="max-width:380px;font-size:15px">Accuracy sobre el test oficial. Las cuatro arquitecturas superan el 91 %.</p>
+    </div>
+
+    <!-- barras -->
+    <div style="margin-top:42px;display:flex;flex-direction:column;gap:22px">
+      <!-- DistilBERT -->
+      <div style="display:grid;grid-template-columns:200px 1fr 90px;gap:18px;align-items:center">
+        <div><div style="font-weight:600">DistilBERT</div><div style="font-size:12px;color:var(--mute)">Transformer · estado del arte</div></div>
+        <div class="bar" style="height:26px"><span style="width:94.6%;background:linear-gradient(90deg,#7c3aed,#a855f7)"></span></div>
+        <div class="num" style="font-size:24px;text-align:right;color:var(--scitech);font-weight:600">94,6%</div>
+      </div>
+      <!-- NewsHybridNet -->
+      <div style="display:grid;grid-template-columns:200px 1fr 90px;gap:18px;align-items:center">
+        <div><div style="font-weight:600">NewsHybridNet</div><div style="font-size:12px;color:var(--mute)">propuesta del grupo</div></div>
+        <div class="bar" style="height:26px"><span style="width:92.6%;background:linear-gradient(90deg,#2563eb,#3b82f6)"></span></div>
+        <div class="num" style="font-size:24px;text-align:right;color:var(--world);font-weight:600">92,6%</div>
+      </div>
+      <!-- BiLSTM -->
+      <div style="display:grid;grid-template-columns:200px 1fr 90px;gap:18px;align-items:center">
+        <div><div style="font-weight:600">BiLSTM + atención</div><div style="font-size:12px;color:var(--mute)">recurrente desde cero</div></div>
+        <div class="bar" style="height:26px"><span style="width:92.4%;background:#94a3b8"></span></div>
+        <div class="num" style="font-size:24px;text-align:right;color:var(--ink-soft);font-weight:600">92,4%</div>
+      </div>
+      <!-- TF-IDF -->
+      <div style="display:grid;grid-template-columns:200px 1fr 90px;gap:18px;align-items:center">
+        <div><div style="font-weight:600">TF-IDF + Softmax</div><div style="font-size:12px;color:var(--mute)">línea base clásica</div></div>
+        <div class="bar" style="height:26px"><span style="width:92.0%;background:#cbd5e1"></span></div>
+        <div class="num" style="font-size:24px;text-align:right;color:var(--ink-soft);font-weight:600">92,0%</div>
+      </div>
+    </div>
+
+    <div style="margin-top:36px;border-top:1px solid var(--line);padding-top:20px;display:flex;gap:40px;flex-wrap:wrap">
+      <div style="max-width:520px">
+        <div style="font-family:var(--serif);font-size:20px">El Transformer gana. Pero el margen es pequeño.</div>
+        <div class="lead" style="font-size:15px;margin-top:6px">Entre la línea base más simple y el estado del arte hay apenas <strong>2,6 puntos</strong>. Toda la familia resuelve bien AG News.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide__num">07</div>
+</section>
+
+<!-- ======================= 08 · CURVAS DE APRENDIZAJE (split, datos reales) ======================= -->
+<section class="slide bg-night" id="s8" style="align-items:center">
+  <div class="slide__tag"><span class="dot" style="background:var(--gold)"></span> Convergencia</div>
+  <div class="split" style="display:grid;grid-template-columns:1fr 1.25fr;gap:clamp(36px,5vw,80px);align-items:center;width:100%;max-width:var(--maxw);margin:0 auto">
+    <div>
+      <div class="kicker" style="color:#8fb0ff">Macro-F1 de validación por época</div>
+      <h2 style="font-size:clamp(26px,3.2vw,44px)">Dos velocidades de aprendizaje</h2>
+      <p class="lead" style="margin-top:20px">
+        DistilBERT llega a su techo en <strong>3 épocas</strong>: parte de un conocimiento ya adquirido.
+      </p>
+      <p class="lead" style="margin-top:14px">
+        NewsHybridNet y la BiLSTM necesitan más vueltas para converger, porque aprenden casi todo desde cero.
+      </p>
+      <div style="display:flex;gap:22px;margin-top:26px;flex-wrap:wrap">
+        <div class="cat" style="color:#b794f6"><i style="background:#b794f6"></i>DistilBERT</div>
+        <div class="cat" style="color:#6ea0ff"><i style="background:#6ea0ff"></i>NewsHybridNet</div>
+        <div class="cat" style="color:#94a3b8"><i style="background:#94a3b8"></i>BiLSTM</div>
+      </div>
+    </div>
+
+    <!-- gráfico SVG de líneas con puntos reales -->
+    <div class="card" style="padding:26px">
+      <svg viewBox="0 0 520 300" width="100%" role="img" aria-label="Curvas de macro-F1 por época">
+        <!-- ejes -->
+        <line x1="50" y1="20" x2="50" y2="250" stroke="#ffffff30"/>
+        <line x1="50" y1="250" x2="500" y2="250" stroke="#ffffff30"/>
+        <!-- grilla y etiquetas Y (0.88 - 0.95) -->
+        <g font-family="JetBrains Mono" font-size="11" fill="#8b93ad">
+          <text x="14" y="250">.89</text>
+          <text x="14" y="193">.91</text>
+          <text x="14" y="136">.93</text>
+          <text x="14" y="79">.95</text>
+          <line x1="50" y1="245" x2="500" y2="245" stroke="#ffffff12"/>
+          <line x1="50" y1="188" x2="500" y2="188" stroke="#ffffff12"/>
+          <line x1="50" y1="131" x2="500" y2="131" stroke="#ffffff12"/>
+          <line x1="50" y1="74"  x2="500" y2="74"  stroke="#ffffff12"/>
+        </g>
+        <!-- eje X épocas 1..9 -->
+        <g font-family="JetBrains Mono" font-size="11" fill="#8b93ad" text-anchor="middle">
+          <text x="75"  y="270">1</text>
+          <text x="125" y="270">2</text>
+          <text x="175" y="270">3</text>
+          <text x="225" y="270">4</text>
+          <text x="275" y="270">5</text>
+          <text x="325" y="270">6</text>
+          <text x="375" y="270">7</text>
+          <text x="425" y="270">8</text>
+          <text x="475" y="270">9</text>
+          <text x="275" y="292" fill="#6b7488">época</text>
+        </g>
+        <!-- escala: y = 250 - (f1 - .88)/.07 * 230 ; f1 .89->222 .91->193 ... recalculo lineal:
+             map .88->250, .95->20 => y = 250 - (f1-.88)*(230/.07) -->
+        <!-- DistilBERT: ep1 .9392 ep2 .9478 ep3 .9482 -->
+        <polyline fill="none" stroke="#b794f6" stroke-width="3" points="75,59 125,31 175,29"/>
+        <circle cx="75" cy="59" r="4.5" fill="#b794f6"/><circle cx="125" cy="31" r="4.5" fill="#b794f6"/><circle cx="175" cy="29" r="4.5" fill="#b794f6"/>
+        <!-- NewsHybridNet: ep1 .9025 ep2 .9298 ep3 .9314 ep4 .9229 ep5 .9302 ep6 .9268 -->
+        <polyline fill="none" stroke="#6ea0ff" stroke-width="3" points="75,169 125,79 175,74 225,102 275,78 325,89"/>
+        <g fill="#6ea0ff"><circle cx="75" cy="169" r="4"/><circle cx="125" cy="79" r="4"/><circle cx="175" cy="74" r="4"/><circle cx="225" cy="102" r="4"/><circle cx="275" cy="78" r="4"/><circle cx="325" cy="89" r="4"/></g>
+        <!-- BiLSTM: ep1 .8967 ep2 .9168 ep3 .9173 ep4 .9176 ep5 .9192 ep6 .9210 ep7 .9186 ep8 .9171 ep9 .9173 -->
+        <polyline fill="none" stroke="#94a3b8" stroke-width="2.5" points="75,188 125,122 175,120 225,119 275,114 325,108 375,116 425,121 475,120"/>
+        <g fill="#94a3b8"><circle cx="75" cy="188" r="3.3"/><circle cx="125" cy="122" r="3.3"/><circle cx="175" cy="120" r="3.3"/><circle cx="225" cy="119" r="3.3"/><circle cx="275" cy="114" r="3.3"/><circle cx="325" cy="108" r="3.3"/><circle cx="375" cy="116" r="3.3"/><circle cx="425" cy="121" r="3.3"/><circle cx="475" cy="120" r="3.3"/></g>
+      </svg>
+    </div>
+  </div>
+  <div class="slide__num">08</div>
+</section>
+
+<!-- ======================= 09 · ABLACIONES: EL HALLAZGO INESPERADO (centrada, dato grande) ======================= -->
+<section class="slide bg-ink" id="s9" style="flex-direction:column;justify-content:center">
+  <div class="slide__tag"><span class="dot" style="background:var(--gold)"></span> Estudio de ablación</div>
+  <div style="max-width:var(--maxw);margin:0 auto;width:100%">
+    <div style="text-align:center;max-width:720px;margin:0 auto">
+      <div class="kicker" style="color:#8fb0ff;justify-content:center">Lo que no esperábamos</div>
+      <h2 style="font-size:clamp(28px,3.8vw,52px)">La rama que diseñamos para generalizar… restó dentro de distribución</h2>
+    </div>
+
+    <!-- tres variantes comparadas -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:46px">
+      <div class="card" style="text-align:center;padding:28px 22px">
+        <div style="font-family:var(--mono);font-size:11px;color:#8b93ad;letter-spacing:.1em">EMBEDDINGS ALEATORIOS</div>
+        <div style="font-family:var(--serif);font-size:clamp(38px,5vw,56px);margin:10px 0;color:#c3cbe2">92,4%</div>
+        <div style="font-size:13px;color:#8b93ad">entrenable, desde cero</div>
+      </div>
+      <div class="card" style="text-align:center;padding:28px 22px;border-color:#6ea0ff44">
+        <div style="font-family:var(--mono);font-size:11px;color:#6ea0ff;letter-spacing:.1em">CONFIGURACIÓN COMPLETA</div>
+        <div style="font-family:var(--serif);font-size:clamp(38px,5vw,56px);margin:10px 0;color:#dce6ff">92,6%</div>
+        <div style="font-size:13px;color:#8b93ad">fastText congelado + rama B</div>
+      </div>
+      <div class="card" style="text-align:center;padding:28px 22px;border-color:#34d39966;background:linear-gradient(180deg,#34d39918,#ffffff06)">
+        <div style="font-family:var(--mono);font-size:11px;color:#34d399;letter-spacing:.1em">SIN RAMA LÉXICA</div>
+        <div style="font-family:var(--serif);font-size:clamp(38px,5vw,56px);margin:10px 0;color:#bbf7d0">93,4%</div>
+        <div style="font-size:13px;color:#8b93ad">solo rama semántica · <strong style="color:#34d399">la mejor</strong></div>
+      </div>
+    </div>
+
+    <p class="lead" style="text-align:center;max-width:760px;margin:36px auto 0;color:#aeb6cc">
+      En AG News —noticias de la misma época y distribución— los n-gramas de caracteres introducen ruido más que señal.
+      Su valor real está pensado para el reto fuera de distribución: palabras y entidades que el modelo nunca vio.
+    </p>
+  </div>
+  <div class="slide__num">09</div>
+</section>
+
+<!-- ======================= 10 · EFICIENCIA (visual izq / texto der) ======================= -->
+<section class="slide bg-paper" id="s10" style="align-items:center">
+  <div class="slide__tag"><span class="dot" style="background:var(--business)"></span> Costo computacional</div>
+  <div class="two-col" style="display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(36px,5vw,80px);align-items:center;width:100%;max-width:var(--maxw);margin:0 auto">
+
+    <!-- visual: comparación de tiempo y tamaño -->
+    <div>
+      <div class="card" style="padding:28px">
+        <div style="font-family:var(--mono);font-size:12px;color:var(--mute);letter-spacing:.12em">TIEMPO DE ENTRENAMIENTO · Tesla T4</div>
+        <div style="margin-top:20px;display:flex;flex-direction:column;gap:18px">
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px"><span>DistilBERT</span><span class="num" style="color:var(--scitech);font-weight:600">20,5 min</span></div>
+            <div class="bar"><span style="width:100%;background:linear-gradient(90deg,#7c3aed,#a855f7)"></span></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px"><span>BiLSTM + atención</span><span class="num" style="font-weight:600">6,0 min</span></div>
+            <div class="bar"><span style="width:29%;background:#94a3b8"></span></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px"><span>NewsHybridNet</span><span class="num" style="color:var(--world);font-weight:600">4,0 min</span></div>
+            <div class="bar"><span style="width:20%;background:linear-gradient(90deg,#2563eb,#3b82f6)"></span></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px"><span>TF-IDF + Softmax</span><span class="num" style="font-weight:600">2,5 min</span></div>
+            <div class="bar"><span style="width:12%;background:#cbd5e1"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- texto -->
+    <div>
+      <div class="kicker">La otra mitad de la historia</div>
+      <h2 style="font-size:clamp(28px,3.4vw,46px)">2,6 puntos cuestan 5 veces más</h2>
+      <p class="lead" style="margin-top:20px">
+        DistilBERT tarda <strong>5 veces más</strong> en entrenar que NewsHybridNet y pesa <strong>3 veces más</strong> en disco.
+      </p>
+      <div style="display:flex;gap:16px;margin-top:26px">
+        <div style="flex:1;background:var(--ink);color:#fff;border-radius:16px;padding:20px;text-align:center">
+          <div style="font-family:var(--serif);font-size:34px">≈75 MB</div>
+          <div style="font-family:var(--mono);font-size:11px;opacity:.7;margin-top:4px">NEWSHYBRIDNET</div>
+        </div>
+        <div style="flex:1;border:1px solid var(--line);border-radius:16px;padding:20px;text-align:center">
+          <div style="font-family:var(--serif);font-size:34px;color:var(--scitech)">≈255 MB</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--mute);margin-top:4px">DISTILBERT</div>
+        </div>
+      </div>
+      <p class="lead" style="font-size:15px;margin-top:22px">
+        Para una demo sin GPU y con latencia baja, la red ligera es la opción sensata.
+      </p>
+    </div>
+  </div>
+  <div class="slide__num">10</div>
+</section>
+
+<!-- ======================= 11 · ESTABILIDAD MULTISEMILLA (split) ======================= -->
+<section class="slide bg-night" id="s11" style="align-items:center">
+  <div class="slide__tag"><span class="dot" style="background:var(--gold)"></span> Reproducibilidad</div>
+  <div class="split" style="display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(36px,5vw,80px);align-items:center;width:100%;max-width:var(--maxw);margin:0 auto">
+    <div>
+      <div class="kicker" style="color:#8fb0ff">NewsHybridNet · tres semillas</div>
+      <h2 style="font-size:clamp(26px,3.4vw,46px)">No fue suerte</h2>
+      <p class="lead" style="margin-top:20px">
+        Reentrenar con tres semillas distintas da resultados que caben en menos de medio punto.
+        La arquitectura es <strong>estable</strong>, no un golpe de azar.
+      </p>
+      <div style="margin-top:28px;display:flex;align-items:baseline;gap:14px">
+        <div style="font-family:var(--serif);font-size:clamp(50px,7vw,86px);color:#dce6ff;line-height:1">92,9%</div>
+        <div>
+          <div style="font-family:var(--mono);font-size:13px;color:#8fb0ff">accuracy medio</div>
+          <div style="font-family:var(--mono);font-size:13px;color:#8b93ad">± 0,2 pp</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- tres semillas como puntos sobre una línea -->
+    <div class="card" style="padding:30px">
+      <div style="display:flex;flex-direction:column;gap:22px">
+        <div style="display:grid;grid-template-columns:70px 1fr 70px;gap:14px;align-items:center">
+          <div style="font-family:var(--mono);font-size:13px;color:#8b93ad">seed 30</div>
+          <div class="bar" style="background:#ffffff14;height:10px"><span style="width:92.7%;background:#6ea0ff"></span></div>
+          <div class="num" style="text-align:right;color:#dce6ff">92,68%</div>
+        </div>
+        <div style="display:grid;grid-template-columns:70px 1fr 70px;gap:14px;align-items:center">
+          <div style="font-family:var(--mono);font-size:13px;color:#8b93ad">seed 42</div>
+          <div class="bar" style="background:#ffffff14;height:10px"><span style="width:93.0%;background:#6ea0ff"></span></div>
+          <div class="num" style="text-align:right;color:#dce6ff">93,03%</div>
+        </div>
+        <div style="display:grid;grid-template-columns:70px 1fr 70px;gap:14px;align-items:center">
+          <div style="font-family:var(--mono);font-size:13px;color:#8b93ad">seed 123</div>
+          <div class="bar" style="background:#ffffff14;height:10px"><span style="width:93.1%;background:#6ea0ff"></span></div>
+          <div class="num" style="text-align:right;color:#dce6ff">93,08%</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid #ffffff18;margin-top:24px;padding-top:16px;font-size:13px;color:#8b93ad;text-align:center">
+        Rango total entre semillas: <span style="color:#dce6ff">0,40 puntos</span>
+      </div>
+    </div>
+  </div>
+  <div class="slide__num">11</div>
+</section>
+
+<!-- ======================= 12 · SÍNTESIS COMPARATIVA (tabla full width) ======================= -->
+<section class="slide bg-paper" id="s12" style="flex-direction:column;justify-content:center">
+  <div class="slide__tag"><span class="dot" style="background:var(--world)"></span> Síntesis</div>
+  <div style="max-width:var(--maxw);margin:0 auto;width:100%">
+    <div class="kicker">Todo en una sola mirada</div>
+    <h2 style="font-size:clamp(28px,3.6vw,50px)">Precisión, costo y propósito</h2>
+
+    <table style="margin-top:30px;font-size:15.5px">
+      <thead>
+        <tr>
+          <th>Modelo</th>
+          <th>Accuracy</th>
+          <th>Macro-F1</th>
+          <th>Entrenamiento</th>
+          <th>Rol</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>TF-IDF + Softmax</strong></td>
+          <td class="num">92,0%</td>
+          <td class="num">0,920</td>
+          <td class="num">2,5 min</td>
+          <td style="color:var(--mute)">Línea base clásica</td>
+        </tr>
+        <tr>
+          <td><strong>BiLSTM + atención</strong></td>
+          <td class="num">92,4%</td>
+          <td class="num">0,924</td>
+          <td class="num">6,0 min</td>
+          <td style="color:var(--mute)">Red recurrente desde cero</td>
+        </tr>
+        <tr style="background:#2563eb08">
+          <td><strong style="color:var(--world)">NewsHybridNet</strong></td>
+          <td class="num" style="color:var(--world);font-weight:600">92,6%</td>
+          <td class="num" style="color:var(--world);font-weight:600">0,926</td>
+          <td class="num">4,0 min</td>
+          <td style="color:var(--ink-soft)"><strong>Propuesta del grupo</strong></td>
+        </tr>
+        <tr style="background:#7c3aed08">
+          <td><strong style="color:var(--scitech)">DistilBERT</strong></td>
+          <td class="num" style="color:var(--scitech);font-weight:600">94,6%</td>
+          <td class="num" style="color:var(--scitech);font-weight:600">0,946</td>
+          <td class="num">20,5 min</td>
+          <td style="color:var(--ink-soft)">Estado del arte</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:34px">
+      <div class="card" style="padding:20px">
+        <div style="font-family:var(--serif);font-size:30px;color:var(--scitech)">+2,6 pp</div>
+        <div style="font-size:14px;color:var(--ink-soft);margin-top:4px">la ventaja real del Transformer</div>
+      </div>
+      <div class="card" style="padding:20px">
+        <div style="font-family:var(--serif);font-size:30px;color:var(--world)">5×</div>
+        <div style="font-size:14px;color:var(--ink-soft);margin-top:4px">más rápida la red propia al entrenar</div>
+      </div>
+      <div class="card" style="padding:20px">
+        <div style="font-family:var(--serif);font-size:30px">4 / 4</div>
+        <div style="font-size:14px;color:var(--ink-soft);margin-top:4px">modelos por encima del 91 %</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide__num">12</div>
+</section>
+
+<!-- ======================= 13 · CIERRE (full-bleed, idea final) ======================= -->
+<section class="slide bg-night" id="s13" style="flex-direction:column;justify-content:space-between">
+  <div class="slide__tag"><span class="dot" style="background:var(--gold)"></span> Conclusión</div>
+  <div style="margin-top:auto;max-width:980px">
+    <div class="kicker" style="color:#8fb0ff">La respuesta a la pregunta</div>
+    <h2 style="font-size:clamp(32px,5vw,78px);line-height:1.08">
+      El conocimiento profundo da la ventaja.
+      El conocimiento ligero la alcanza <span style="color:#6ea0ff">casi por completo</span>.
+    </h2>
+    <p class="lead" style="margin-top:28px;max-width:720px;color:#c3cbe2">
+      Una arquitectura propia de 0,1 GFLOPs por ejemplo llega a <strong>2 puntos</strong> del Transformer,
+      entrena 5 veces más rápido y corre sin GPU. Cuando la latencia y el costo importan, ligero no significa inferior.
+    </p>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:24px;margin-top:52px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <span class="badge" style="background:#2563eb22;color:#9cc0ff">World</span>
+      <span class="badge" style="background:#05966922;color:#6ee7b7">Sports</span>
+      <span class="badge" style="background:#d9770622;color:#fcd34d">Business</span>
+      <span class="badge" style="background:#7c3aed22;color:#c9b2ff">Sci/Tech</span>
+    </div>
+    <div style="text-align:right;font-family:var(--mono);font-size:13px;color:#8b93ad">
+      Gracias.<br/>
+      Emmanuel Álvarez · Samuel Herrera · Cristian Cabarcas
+    </div>
+  </div>
+  <div class="slide__num">13</div>
+</section>
+
+</main>
+
+<script>
+/* --- Modo embebido: ?solo=sN muestra una sola diapositiva que llena el marco --- */
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var solo = params.get('solo');
+  if (solo){
+    document.body.classList.add('embed');
+    var target = document.getElementById(solo);
+    if (target) target.classList.add('embed-show');
+    return; // en modo embebido no activamos navegación global
+  }
+})();
+
+(function(){
+  if (document.body.classList.contains('embed')) return;
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var nav = document.getElementById('nav');
+  var progress = document.getElementById('progress');
+
+  // construir puntos de navegación
+  slides.forEach(function(s, i){
+    var a = document.createElement('a');
+    a.href = '#' + s.id;
+    a.title = 'Diapositiva ' + (i+1);
+    nav.appendChild(a);
+  });
+
+  // barra de progreso al hacer scroll
+  function onScroll(){
+    var h = document.documentElement;
+    var scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight);
+    progress.style.width = Math.max(0, Math.min(1, scrolled)) * 100 + '%';
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  // índice de la diapositiva más visible
+  function currentIndex(){
+    var mid = window.scrollY + window.innerHeight/2;
+    for (var i=0;i<slides.length;i++){
+      var top = slides[i].offsetTop;
+      var bot = top + slides[i].offsetHeight;
+      if (mid >= top && mid < bot) return i;
+    }
+    return 0;
+  }
+
+  // navegación por teclado
+  function go(i){
+    i = Math.max(0, Math.min(slides.length-1, i));
+    slides[i].scrollIntoView({behavior:'smooth'});
+  }
+  document.addEventListener('keydown', function(e){
+    if (['ArrowRight','ArrowDown','PageDown',' '].indexOf(e.key) >= 0){ e.preventDefault(); go(currentIndex()+1); }
+    else if (['ArrowLeft','ArrowUp','PageUp'].indexOf(e.key) >= 0){ e.preventDefault(); go(currentIndex()-1); }
+    else if (e.key === 'Home'){ e.preventDefault(); go(0); }
+    else if (e.key === 'End'){ e.preventDefault(); go(slides.length-1); }
+  });
+})();
+</script>
+</body>
+</html>

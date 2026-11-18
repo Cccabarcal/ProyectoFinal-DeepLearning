@@ -61,6 +61,20 @@ def predict(req: PredictRequest):
     return {"text": text, "classes": CLASS_NAMES, "results": REGISTRY.predict_all(text)}
 
 
+# --- Servir recursos de resultados (p. ej. la figura de curvas de aprendizaje) ---
+# La presentación embebida muestra models/results/curvas_aprendizaje.png; se expone
+# bajo /static para que el frontend la cargue sin copiar el archivo.
+RESULTS_DIR = Path(__file__).resolve().parent.parent.parent / "models" / "results"
+
+
+@app.get("/static/curvas_aprendizaje.png")
+def curvas_aprendizaje():
+    png = RESULTS_DIR / "curvas_aprendizaje.png"
+    if not png.exists():
+        raise HTTPException(status_code=404, detail="curvas_aprendizaje.png no encontrada")
+    return FileResponse(str(png), media_type="image/png")
+
+
 # --- Servir el frontend estático ---
 if FRONTEND_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")

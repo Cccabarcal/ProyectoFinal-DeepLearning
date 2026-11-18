@@ -87,6 +87,51 @@
         </div>
       </div>
     </section>
+
+    <!-- ============ Presentación embebida (tipo PowerPoint) ============ -->
+    <section class="card slides-card">
+      <div class="section-head slides-head">
+        <h2>Presentación del proyecto</h2>
+        <span class="muted">Usa las flechas ← → o los botones. Pantalla completa para presentar.</span>
+      </div>
+
+      <div id="deck" class="deck">
+        <!-- Barra de controles -->
+        <div class="deck-toolbar">
+          <button id="slide-prev" class="btn btn-ghost deck-nav" aria-label="Diapositiva anterior">‹ Anterior</button>
+          <span id="slide-indicator" class="deck-indicator">1 / 13</span>
+          <button id="slide-next" class="btn btn-ghost deck-nav" aria-label="Diapositiva siguiente">Siguiente ›</button>
+          <button id="slide-fs" class="btn btn-primary deck-fs" aria-label="Pantalla completa">⛶ Pantalla completa</button>
+        </div>
+
+        <!-- Viewport de diapositivas -->
+        <div class="deck-stage">
+          <div id="deck-track" class="deck-track">
+
+            <!-- ============================================================
+                 Presentación premium embebida. Cada diapositiva es una
+                 vista (iframe) de frontend/presentacion.html?solo=sN, que
+                 muestra una sola slide llenando el marco 16:9. Al ampliar
+                 (pantalla completa) el marco crece y la slide se ve nítida.
+                 ============================================================ -->
+            <article class="slide slide-embed" data-title="Portada"><iframe class="slide-frame" src="/static/presentacion.html?solo=s1" title="Diapositiva 1" loading="lazy"></iframe></article>
+            <article class="slide slide-embed" data-title="El problema"><iframe class="slide-frame" src="/static/presentacion.html?solo=s2" title="Diapositiva 2" loading="lazy"></iframe></article>
+            <article class="slide slide-embed" data-title="Pregunta de investigación"><iframe class="slide-frame" src="/static/presentacion.html?solo=s3" title="Diapositiva 3" loading="lazy"></iframe></article>
+            <article class="slide slide-embed" data-title="Los datos"><iframe class="slide-frame" src="/static/presentacion.html?solo=s4" title="Diapositiva 4" loading="lazy"></iframe></article>
+            <article class="slide slide-embed" data-title="Los competidores"><iframe class="slide-frame" src="/static/presentacion.html?solo=s5" title="Diapositiva 5" loading="lazy"></iframe></article>
+            <article class="slide slide-embed" data-title="Arquitectura NewsHybridNet"><iframe class="slide-frame" src="/static/presentacion.html?solo=s6" title="Diapositiva 6" loading="lazy"></iframe></article>
+            <article class="slide slide-embed" data-title="Resultados en test"><iframe class="slide-frame" src="/static/presentacion.html?solo=s7" title="Diapositiva 7" loading="lazy"></iframe></article>
+            <article class="slide slide-embed" data-title="Curvas de aprendizaje"><iframe class="slide-frame" src="/static/presentacion.html?solo=s8" title="Diapositiva 8" loading="lazy"></iframe></article>
+            <article class="slide slide-embed" data-title="Ablaciones"><iframe class="slide-frame" src="/static/presentacion.html?solo=s9" title="Diapositiva 9" loading="lazy"></iframe></article>
+            <article class="slide slide-embed" data-title="Costo computacional"><iframe class="slide-frame" src="/static/presentacion.html?solo=s10" title="Diapositiva 10" loading="lazy"></iframe></article>
+            <article class="slide slide-embed" data-title="Estabilidad multisemilla"><iframe class="slide-frame" src="/static/presentacion.html?solo=s11" title="Diapositiva 11" loading="lazy"></iframe></article>
+            <article class="slide slide-embed" data-title="Síntesis"><iframe class="slide-frame" src="/static/presentacion.html?solo=s12" title="Diapositiva 12" loading="lazy"></iframe></article>
+            <article class="slide slide-embed" data-title="Conclusión"><iframe class="slide-frame" src="/static/presentacion.html?solo=s13" title="Diapositiva 13" loading="lazy"></iframe></article>
+
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="footer">

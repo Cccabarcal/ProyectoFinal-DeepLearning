@@ -366,3 +366,293 @@ textarea:focus {
   .composer-footer { flex-direction: column; align-items: stretch; }
   .composer-buttons { margin-left: 0; justify-content: space-between; }
 }
+
+/* ============================================================
+   Presentación embebida (deck tipo PowerPoint)
+   ============================================================ */
+/* Separada del mapa de atención y más ancha que el resto (se sale del
+   contenedor central para verse horizontal/panorámica). */
+.slides-card {
+  margin-top: 56px;
+  width: min(1320px, 96vw);
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+.slides-head { justify-content: space-between; }
+
+.deck {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---- Barra de controles ---- */
+.deck-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.deck-nav { padding: 9px 16px; }
+.deck-indicator {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-family: "JetBrains Mono", monospace;
+  min-width: 56px;
+  text-align: center;
+}
+.deck-fs { margin-left: auto; padding: 9px 16px; }
+
+/* ---- Escenario / viewport ---- */
+.deck-stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid var(--card-border);
+  background: var(--bg-elevated);
+  /* relación de aspecto 16:9 */
+  aspect-ratio: 16 / 9;
+}
+.deck-track {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+/* ---- Diapositiva ----
+   Solo la slide activa (.is-active) se muestra; el resto se oculta por
+   completo (display:none) para que no aparezca todo el contenido apilado. */
+.slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: clamp(20px, 3.2vw, 44px);
+  overflow-y: auto;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+.slide.is-active {
+  display: flex;
+  animation: slide-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.slide::-webkit-scrollbar { width: 8px; }
+.slide::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 8px; }
+
+.slide-h {
+  margin: 0 0 4px;
+  font-size: clamp(20px, 2.6vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+.slide-sub {
+  margin: 10px 0 4px;
+  font-size: clamp(14px, 1.7vw, 17px);
+  font-weight: 700;
+  color: var(--accent-2);
+}
+.slide-lead {
+  margin: 0;
+  font-size: clamp(14px, 1.7vw, 18px);
+  color: var(--text);
+}
+.slide-note {
+  margin: auto 0 0;
+  font-size: clamp(11.5px, 1.35vw, 14px);
+  color: var(--text-muted);
+  line-height: 1.5;
+  border-top: 1px solid var(--card-border);
+  padding-top: 10px;
+}
+
+.slide-list {
+  margin: 4px 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: clamp(13px, 1.55vw, 16.5px);
+  line-height: 1.5;
+}
+.slide-list-sm { font-size: clamp(12px, 1.4vw, 14.5px); gap: 6px; }
+.slide-list-num { counter-reset: none; }
+.slide-list li { margin: 0; }
+
+.slide code {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.88em;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+/* ---- Callouts ---- */
+.slide-callout {
+  position: relative;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid var(--ring);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: clamp(13px, 1.55vw, 16px);
+  line-height: 1.5;
+}
+.slide-callout-accent { background: color-mix(in srgb, var(--accent-2) 12%, transparent); }
+.slide-callout-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  margin-bottom: 6px;
+}
+
+/* ---- Tablas ---- */
+.slide-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: clamp(11.5px, 1.4vw, 15px);
+}
+.slide-table th, .slide-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--card-border);
+}
+.slide-table th { color: var(--text-muted); font-weight: 600; font-size: 0.9em; }
+.slide-table-metrics td { font-variant-numeric: tabular-nums; }
+.slide-table-sm { font-size: clamp(11px, 1.3vw, 13.5px); }
+.slide-row-hl { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.slide-row-best { background: color-mix(in srgb, var(--c-sports) 16%, transparent); font-weight: 700; }
+
+/* ---- Columnas ---- */
+.slide-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+@media (max-width: 640px) { .slide-cols { grid-template-columns: 1fr; } }
+
+.slide-branch {
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--bg) 40%, transparent);
+}
+.slide-branch-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+  color: white;
+}
+.tag-a { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+.tag-b { background: linear-gradient(135deg, #22d3ee, #0ea5e9); }
+
+/* ---- Imagen (curvas) ---- */
+.slide-img {
+  max-width: 100%;
+  max-height: 58%;
+  object-fit: contain;
+  border-radius: 10px;
+  background: white;
+  padding: 8px;
+  align-self: center;
+}
+.slide-img-fallback { font-size: 13px; color: var(--text-muted); }
+
+/* ---- Portada ---- */
+.slide-cover {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background:
+    radial-gradient(circle at 25% 20%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 55%),
+    radial-gradient(circle at 80% 85%, color-mix(in srgb, var(--accent-2) 20%, transparent), transparent 55%);
+}
+.slide-eyebrow {
+  font-size: clamp(11px, 1.4vw, 14px);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+.slide-cover-title {
+  margin: 10px 0 6px;
+  font-size: clamp(26px, 4.6vw, 48px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  background: linear-gradient(120deg, var(--text), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.slide-cover-sub {
+  margin: 0;
+  max-width: 640px;
+  font-size: clamp(14px, 1.9vw, 20px);
+  color: var(--text-muted);
+}
+.slide-pills { display: flex; gap: 8px; margin: 20px 0 12px; flex-wrap: wrap; justify-content: center; }
+.pill {
+  font-size: clamp(11px, 1.4vw, 14px);
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 999px;
+  color: white;
+}
+.pill-world { background: var(--c-world); }
+.pill-sports { background: var(--c-sports); }
+.pill-business { background: var(--c-business); }
+.pill-scitech { background: var(--c-scitech); }
+.slide-authors { font-size: clamp(13px, 1.6vw, 16px); color: var(--text); font-weight: 600; }
+
+/* ============================================================
+   Modo pantalla completa (Fullscreen API sobre #deck)
+   ============================================================ */
+.deck:fullscreen {
+  background: var(--bg);
+  padding: clamp(16px, 3vh, 40px) clamp(20px, 5vw, 80px);
+  justify-content: center;
+}
+.deck:fullscreen .deck-stage {
+  aspect-ratio: auto;
+  flex: 1;
+  min-height: 0;
+}
+.deck:fullscreen .slide { padding: clamp(28px, 4vw, 72px); }
+/* prefijo -webkit para navegadores WebKit/Blink antiguos */
+.deck:-webkit-full-screen {
+  background: var(--bg);
+  padding: 2vh 5vw;
+}
+.deck:-webkit-full-screen .deck-stage { aspect-ratio: auto; flex: 1; }
+
+/* ============================================================
+   Diapositivas embebidas (iframe de la presentación premium)
+   Cada .slide-embed llena el marco 16:9 sin padding; el iframe
+   carga una sola diapositiva de presentacion.html (?solo=sN).
+   ============================================================ */
+.slide-embed {
+  padding: 0;
+  overflow: hidden;
+  background: #0a0e1a;          /* fondo mientras carga el iframe */
+}
+.slide-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #0a0e1a;
+}
+/* En pantalla completa el marco crece; el iframe lo sigue automáticamente
+   porque está a 100% de alto/ancho. No hace falta regla extra. */

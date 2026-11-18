@@ -220,6 +220,83 @@ document.getElementById("examples").addEventListener("click", (e) => {
   classify();
 });
 
+/* ============================================================
+   Presentación embebida (deck tipo PowerPoint)
+   ============================================================ */
+const deck = el("deck");
+const deckTrack = el("deck-track");
+const slidePrev = el("slide-prev");
+const slideNext = el("slide-next");
+const slideFs = el("slide-fs");
+const slideIndicator = el("slide-indicator");
+
+if (deck && deckTrack) {
+  const slides = Array.from(deckTrack.querySelectorAll(".slide"));
+  let current = 0;
+
+  function renderSlide() {
+    // Oculta todas las slides y muestra solo la activa.
+    slides.forEach((s, i) => {
+      s.classList.toggle("is-active", i === current);
+      s.setAttribute("aria-hidden", i === current ? "false" : "true");
+    });
+    slideIndicator.textContent = `${current + 1} / ${slides.length}`;
+    slidePrev.disabled = current === 0;
+    slideNext.disabled = current === slides.length - 1;
+    // Reinicia el scroll de la slide visible.
+    if (slides[current]) slides[current].scrollTop = 0;
+  }
+
+  function goTo(i) {
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    renderSlide();
+  }
+  const nextSlide = () => goTo(current + 1);
+  const prevSlide = () => goTo(current - 1);
+
+  slideNext.addEventListener("click", nextSlide);
+  slidePrev.addEventListener("click", prevSlide);
+
+  /* Teclado: ← → PageUp/PageDown Home/End.
+     Se ignora si el foco está en el textarea (salvo en pantalla completa). */
+  document.addEventListener("keydown", (e) => {
+    const typing = document.activeElement === input;
+    const fsOnDeck = (document.fullscreenElement || document.webkitFullscreenElement) === deck;
+    if (typing && !fsOnDeck) return;
+    if (e.key === "ArrowRight" || e.key === "PageDown") { nextSlide(); }
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") { prevSlide(); }
+    else if (e.key === "Home") { goTo(0); }
+    else if (e.key === "End") { goTo(slides.length - 1); }
+  });
+
+  /* Pantalla completa (Fullscreen API con fallback -webkit) */
+  function isFullscreen() {
+    return document.fullscreenElement || document.webkitFullscreenElement;
+  }
+  async function toggleFullscreen() {
+    try {
+      if (!isFullscreen()) {
+        if (deck.requestFullscreen) await deck.requestFullscreen();
+        else if (deck.webkitRequestFullscreen) deck.webkitRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) await document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
+    } catch (err) {
+      setStatus(`No se pudo cambiar a pantalla completa: ${err.message}`, "error");
+    }
+  }
+  function syncFsButton() {
+    const on = !!isFullscreen();
+    slideFs.textContent = on ? "⤢ Salir de pantalla completa" : "⛶ Pantalla completa";
+  }
+  slideFs.addEventListener("click", toggleFullscreen);
+  document.addEventListener("fullscreenchange", syncFsButton);
+  document.addEventListener("webkitfullscreenchange", syncFsButton);
+
+  renderSlide();
+}
+
 /* ---------- Init ---------- */
 initTheme();
 updateCharcount();
