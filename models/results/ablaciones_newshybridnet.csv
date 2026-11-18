@@ -1,0 +1,4 @@
+variante,accuracy,macro_f1
+emb_random (entrenable),0.9242105263157895,0.9238964252553986
+sin rama B (solo semantica),0.9342105263157895,0.934258354271887
+full (fastText congelado + rama B),0.9257894736842105,0.9257897729101993

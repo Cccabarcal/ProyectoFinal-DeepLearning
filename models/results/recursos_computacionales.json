@@ -1,0 +1,37 @@
+{
+  "hardware": {
+    "os": "Linux-6.18.55+-x86_64-with-glibc2.39",
+    "python": "3.13.16",
+    "cpu": "x86_64",
+    "cpu_cores": 4,
+    "gpu": "Tesla T4",
+    "gpu_mem_GB": 15.64,
+    "ram_GB": 33.66
+  },
+  "tiempos": [
+    {
+      "modelo": "TF-IDF + Softmax",
+      "epocas": 6,
+      "tiempo_total_min": 2.47,
+      "seg_por_epoca": 24.7
+    },
+    {
+      "modelo": "BiLSTM + atencion",
+      "epocas": 9,
+      "tiempo_total_min": 5.99,
+      "seg_por_epoca": 39.9
+    },
+    {
+      "modelo": "NewsHybridNet",
+      "epocas": 6,
+      "tiempo_total_min": 4.01,
+      "seg_por_epoca": 40.1
+    },
+    {
+      "modelo": "DistilBERT",
+      "epocas": 3,
+      "tiempo_total_min": 20.47,
+      "seg_por_epoca": 409.4
+    }
+  ]
+}
