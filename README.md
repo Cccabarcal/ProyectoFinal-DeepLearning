@@ -28,6 +28,37 @@ El diseño completo (problema, datos, arquitecturas, hiperparámetros, evaluaci�
 
 ---
 
+## 🚀 Cómo correr el proyecto (paso a paso)
+
+> Requiere Python 3.10+. Los pesos entrenados ya están en `models/results/checkpoints/`.
+
+**1. Abre una terminal e instala las dependencias:**
+
+```bash
+cd app/backend
+pip install -r requirements.txt
+```
+
+**2. Abre una segunda terminal y arranca el servidor:**
+
+```bash
+cd app/backend
+python -m uvicorn main:app --reload --port 8000
+```
+
+**3. Abre en el navegador:**
+
+```
+http://localhost:8000
+```
+
+Pega una noticia (en inglés), pulsa **Clasificar** y verás la predicción de los 4 modelos. Listo. ✅
+
+> No abras `index.html` con doble clic: la app debe cargarse desde `http://localhost:8000`,
+> que sirve tanto la página como la API.
+
+---
+
 ## Estructura del repositorio
 
 ```
@@ -35,8 +66,8 @@ ProyectoFinal-DeepLearning/
 ├── Anteproyecto.md                 # Documento de diseño del proyecto
 ├── README.md                       # Este archivo
 ├── models/
-│   ├── train_models_kaggle.ipynb   # Notebook: entrena y evalúa los 4 modelos
-│   └── checkpoints/                # Pesos entrenados (se generan al ejecutar; NO se versionan)
+│   ├── train_models.ipynb          # Notebook: entrena y evalúa los 4 modelos
+│   └── results/checkpoints/        # Pesos entrenados (salida del notebook)
 └── app/                            # Interfaz web
     ├── backend/                    # API FastAPI + carga de modelos
     ├── frontend/                   # HTML/CSS/JS propios
@@ -55,26 +86,26 @@ ProyectoFinal-DeepLearning/
 
 ## Parte 1 — Entrenar los modelos
 
-El notebook `models/train_models_kaggle.ipynb` está pensado para **Kaggle** (con fallback local) y
+El notebook `models/train_models.ipynb` está pensado para **Kaggle** (con fallback local) y
 **guarda un checkpoint tras cada época**, de modo que si la sesión se corta, al reejecutar **se reanuda
 automáticamente** desde la última época.
 
 ### En Kaggle (recomendado)
 
-1. Sube `models/train_models_kaggle.ipynb` como notebook de Kaggle.
+1. Sube `models/train_models.ipynb` como notebook de Kaggle.
 2. Activa **Settings → Internet: On** (para descargar AG News y DistilBERT).
 3. (Opcional, para NewsHybridNet con fastText real) añade un dataset de fastText inglés `.bin`.
 4. Ejecuta todas las celdas. Los pesos quedan en `/kaggle/working/checkpoints/`.
-5. Descarga la carpeta `checkpoints/` y cópiala a `models/checkpoints/` en este repo.
+5. Descarga la carpeta `checkpoints/` y cópiala a `models/results/checkpoints/` en este repo.
 
 ### En local
 
 ```bash
 pip install -U torch "transformers>=4.40" "datasets>=2.19" "scikit-learn>=1.3" scipy joblib gensim jupyter
-jupyter notebook models/train_models_kaggle.ipynb
+jupyter notebook models/train_models.ipynb
 ```
 
-### Qué guarda cada modelo (en `models/checkpoints/<modelo>/`)
+### Qué guarda cada modelo (en `models/results/checkpoints/<modelo>/`)
 
 - `last.pt` — última época (modelo, optimizador, scheduler, métricas, estados RNG); escritura atómica.
 - `best.pt` — mejor macro F1 de validación (el que usa la interfaz).
@@ -116,10 +147,10 @@ Abre **http://localhost:8000**
 
 ### Modo demo vs. modelos reales
 
-- Si **no** existen los checkpoints en `models/checkpoints/`, la app funciona en **modo demo**:
+- Si **no** existen los checkpoints en `models/results/checkpoints/`, la app funciona en **modo demo**:
   predicciones simuladas deterministas, marcadas con una insignia `demo`. Útil para ver/desarrollar la
   interfaz antes de tener los pesos.
-- En cuanto se copian los checkpoints reales a `models/checkpoints/`, la app los detecta y usa
+- En cuanto se copian los checkpoints reales a `models/results/checkpoints/`, la app los detecta y usa
   **automáticamente** (insignia `real`), sin tocar código.
 
 ### Conectar los modelos entrenados
@@ -127,7 +158,7 @@ Abre **http://localhost:8000**
 Copia la carpeta `checkpoints/` generada por el notebook de modo que quede así:
 
 ```
-models/checkpoints/
+models/results/checkpoints/
 ├── tfidf_softmax/     best.pt, tfidf_vectorizer.joblib
 ├── rnn_scratch/       best.pt, vocab.json
 ├── newshybridnet/     best.pt, vocab.json, embeddings.npy, ngram_config.json

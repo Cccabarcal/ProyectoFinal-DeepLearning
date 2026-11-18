@@ -22,10 +22,19 @@ from preprocessing import PAD, UNK, char_ngram_hashes, encode, tokenize
 CLASS_NAMES = ["World", "Sports", "Business", "Sci/Tech"]
 NUM_CLASSES = len(CLASS_NAMES)
 
-# Raíz de checkpoints: <repo>/models/checkpoints
+# Raíz de checkpoints. Los pesos entrenados se adjuntan en
+# <repo>/models/results/checkpoints (salida del notebook de Kaggle); se admite
+# también <repo>/models/checkpoints como ubicación alternativa. Se toma la
+# primera que exista; si no hay ninguna, se usa results/checkpoints por defecto
+# (los modelos caerán a modo demo).
 BACKEND_DIR = Path(__file__).resolve().parent
 REPO_DIR = BACKEND_DIR.parent.parent           # ProyectoFinal-DeepLearning/
-CKPT_ROOT = REPO_DIR / "models" / "checkpoints"
+
+_CKPT_CANDIDATES = [
+    REPO_DIR / "models" / "results" / "checkpoints",
+    REPO_DIR / "models" / "checkpoints",
+]
+CKPT_ROOT = next((p for p in _CKPT_CANDIDATES if p.exists()), _CKPT_CANDIDATES[0])
 
 # Pistas léxicas para el modo demo (solo cuando no hay pesos entrenados).
 _DEMO_KEYWORDS = {
