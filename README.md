@@ -78,8 +78,25 @@ jupyter notebook models/train_models_kaggle.ipynb
 
 - `last.pt` — última época (modelo, optimizador, scheduler, métricas, estados RNG); escritura atómica.
 - `best.pt` — mejor macro F1 de validación (el que usa la interfaz).
-- `history.json` — curvas de loss y métricas por época.
+- `history.json` — curvas de loss y métricas por época (incluye `epoch_seconds`).
 - Artefactos para servir: vocabulario, vectorizador TF-IDF, tokenizer, embeddings, config de n-gramas.
+
+### Qué produce el notebook de entrenamiento (en `OUTPUT_DIR`)
+
+Para cubrir los lineamientos del profesor, además de los checkpoints se generan:
+
+- `curvas_aprendizaje.png` — curvas de loss y métricas (train/val) de los 4 modelos (sección 8.1).
+- `recursos_computacionales.json` — hardware (CPU/GPU/RAM) y tiempo de entrenamiento por modelo (8.2).
+- `ablaciones_newshybridnet.csv` — comparación de las ablaciones de NewsHybridNet (sección 10).
+- `multisemilla_newshybridnet.csv` — resultados por semilla y media ± desviación (sección 11).
+- `resumen_resultados.csv` — accuracy y macro F1 en test de los 4 modelos.
+
+### Evaluación sin reentrenar (`models/evaluate_models.ipynb`)
+
+Notebook aparte que **solo carga los `best.pt`** (no reentrena) y produce: matriz de confusión y
+ejemplos mal clasificados, protocolo de latencia, evaluación en el conjunto externo BBC con la brecha
+de generalización, prueba de McNemar entre modelos y la distribución de la compuerta de NewsHybridNet.
+Pensado para reejecutarse muchas veces mientras se prepara el informe.
 
 ---
 
