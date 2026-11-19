@@ -28,7 +28,7 @@ let classes = ["World", "Sports", "Business", "Sci/Tech"];
 
 /* ---------- Tema ---------- */
 function initTheme() {
-  const saved = localStorage.getItem("theme") || "dark";
+  const saved = localStorage.getItem("theme") || "light";
   document.documentElement.setAttribute("data-theme", saved);
   themeToggle.textContent = saved === "dark" ? "🌙" : "☀️";
 }
@@ -154,7 +154,7 @@ function renderAttention(payload) {
     span.className = "tok";
     span.textContent = a.token;
     const intensity = a.weight / maxW;
-    span.style.background = `rgba(99, 102, 241, ${(0.08 + intensity * 0.7).toFixed(3)})`;
+    span.style.background = `rgba(42, 125, 181, ${(0.08 + intensity * 0.7).toFixed(3)})`;
     span.title = `peso ${(a.weight * 100).toFixed(1)}%`;
     tokensEl.appendChild(span);
   });
