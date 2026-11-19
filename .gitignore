@@ -1,11 +1,16 @@
 # ---- Pesos y artefactos de modelos (pesados; no versionar) ----
 models/checkpoints/
+models/results/checkpoints/
 outputs/
 *.pt
 *.bin
 *.npy
 *.joblib
 *.safetensors
+# Artefactos de tokenizador/vocabulario que se regeneran al entrenar
+models/results/checkpoints/**/tokenizer/
+models/results/checkpoints/**/vocab.json
+models/results/checkpoints/**/tokenizer.json
 
 # ---- Python ----
 __pycache__/
