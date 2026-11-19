@@ -7,6 +7,7 @@ preprocesamiento con el que se entrenaron los modelos.
 from __future__ import annotations
 
 import re
+import zlib
 from typing import List, Tuple
 
 PAD, UNK = "<pad>", "<unk>"
@@ -44,7 +45,7 @@ def char_ngram_hashes(text: str, buckets: int, ns: Tuple[int, ...]) -> List[int]
             continue
         for i in range(len(s) - n + 1):
             gram = s[i:i + n]
-            idxs.append(hash(gram) % buckets)
+            idxs.append(zlib.crc32(gram.encode("utf-8")) % buckets)
     if not idxs:
         idxs = [0]
     return idxs

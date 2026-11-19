@@ -53,21 +53,14 @@ Abrir http://localhost:8000
 | NewsHybridNet (`newshybridnet`) | `models/checkpoints/newshybridnet/` | `best.pt`, `vocab.json`, `embeddings.npy`, `ngram_config.json` |
 | DistilBERT (`distilbert`) | `models/checkpoints/distilbert/` | `hf_best/`, `tokenizer/` |
 
-## Nota importante sobre NewsHybridNet
+## Nota sobre NewsHybridNet y el hashing
 
-La rama léxica usa `hash()` de Python para los n-gramas de caracteres, que **no es
-estable entre procesos** salvo que se fije `PYTHONHASHSEED`. Para que la inferencia
-reproduzca exactamente el entrenamiento, ejecutar el entrenamiento y el servidor
-con el mismo valor, por ejemplo:
-
-```bash
-# Windows PowerShell
-$env:PYTHONHASHSEED = "0"; uvicorn main:app --port 8000
-```
-
-Si el notebook se entrenó sin fijar el seed, lo ideal es sustituir `hash()` por una
-función de hash determinista (p. ej. basada en `hashlib`) tanto en el notebook como
-en `preprocessing.py`. Los demás modelos no se ven afectados.
+La rama léxica calcula los n-gramas de caracteres con `zlib.crc32`, que es determinista entre
+procesos y máquinas (el `hash()` de Python no lo es salvo que se fije `PYTHONHASHSEED` antes de
+arrancar el intérprete). El entrenamiento (`models/train_models.ipynb`), la evaluación
+(`models/evaluate_models.ipynb`) y `preprocessing.py` usan la misma función, así que no hace falta
+configurar nada. Los pesos entrenados con la versión anterior (`hash()`) no son compatibles: hay que
+usar los de `models/checkpoints/` generados con esta versión.
 
 ## Endpoints
 

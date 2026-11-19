@@ -34,7 +34,12 @@ _CKPT_CANDIDATES = [
     REPO_DIR / "models" / "results" / "checkpoints",
     REPO_DIR / "models" / "checkpoints",
 ]
-CKPT_ROOT = next((p for p in _CKPT_CANDIDATES if p.exists()), _CKPT_CANDIDATES[0])
+# Se prefiere la carpeta que realmente contiene pesos (best.pt); en el repo,
+# models/results/checkpoints solo guarda historiales y vocabularios.
+CKPT_ROOT = next(
+    (p for p in _CKPT_CANDIDATES if (p / "newshybridnet" / "best.pt").exists()),
+    next((p for p in _CKPT_CANDIDATES if p.exists()), _CKPT_CANDIDATES[0]),
+)
 
 # Pistas léxicas para el modo demo (solo cuando no hay pesos entrenados).
 _DEMO_KEYWORDS = {

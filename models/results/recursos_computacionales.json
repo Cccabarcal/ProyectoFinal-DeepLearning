@@ -1,37 +1,37 @@
 {
   "hardware": {
-    "os": "Linux-6.18.55+-x86_64-with-glibc2.39",
-    "python": "3.13.16",
-    "cpu": "x86_64",
-    "cpu_cores": 4,
-    "gpu": "Tesla T4",
-    "gpu_mem_GB": 15.64,
-    "ram_GB": 33.66
+    "os": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.9",
+    "cpu": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD",
+    "cpu_cores": 16,
+    "gpu": "NVIDIA GeForce RTX 5070 Ti",
+    "gpu_mem_GB": 17.09,
+    "ram_GB": 33.41
   },
   "tiempos": [
     {
       "modelo": "TF-IDF + Softmax",
       "epocas": 6,
-      "tiempo_total_min": 2.47,
-      "seg_por_epoca": 24.7
+      "tiempo_total_min": 0.82,
+      "seg_por_epoca": 8.2
     },
     {
       "modelo": "BiLSTM + atencion",
-      "epocas": 9,
-      "tiempo_total_min": 5.99,
-      "seg_por_epoca": 39.9
+      "epocas": 8,
+      "tiempo_total_min": 2.45,
+      "seg_por_epoca": 18.4
     },
     {
       "modelo": "NewsHybridNet",
-      "epocas": 6,
-      "tiempo_total_min": 4.01,
-      "seg_por_epoca": 40.1
+      "epocas": 7,
+      "tiempo_total_min": 4.32,
+      "seg_por_epoca": 37.0
     },
     {
       "modelo": "DistilBERT",
       "epocas": 3,
-      "tiempo_total_min": 20.47,
-      "seg_por_epoca": 409.4
+      "tiempo_total_min": 6.5,
+      "seg_por_epoca": 130.0
     }
   ]
 }
